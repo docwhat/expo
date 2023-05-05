@@ -1,5 +1,5 @@
 import { Command } from '@expo/commander';
-import spawnAsync from '@expo/spawn-async';
+import spawnAsync, { SpawnResult } from '@expo/spawn-async';
 import assert from 'assert';
 import fs, { mkdirp } from 'fs-extra';
 import glob from 'glob-promise';
@@ -226,26 +226,46 @@ async function androidBuildAndSubmitAsync() {
 
 async function validateChangelogAsync() {
   const projectDir = path.join(EXPO_DIR, 'apps/eas-expo-go');
-  const spawnResult = await spawnAsync(
-    'eas',
-    [
-      'build:version:get',
-      '--platform',
-      'android',
-      '--profile',
-      RELEASE_BUILD_PROFILE,
-      '--json',
-      '--non-interactive',
-    ],
-    {
-      cwd: projectDir,
-      stdio: 'pipe',
-      env: {
-        ...process.env,
-        EAS_DANGEROUS_OVERRIDE_ANDROID_APPLICATION_ID: 'host.exp.exponent',
-      },
-    }
-  );
+  let spawnResult: SpawnResult;
+  try {
+    spawnResult = await spawnAsync(
+      'eas',
+      [
+        'build:version:get',
+        '--platform',
+        'android',
+        '--profile',
+        RELEASE_BUILD_PROFILE,
+        '--json',
+        '--non-interactive',
+      ],
+      {
+        cwd: projectDir,
+        stdio: 'pipe',
+        env: {
+          ...process.env,
+          EAS_DANGEROUS_OVERRIDE_ANDROID_APPLICATION_ID: 'host.exp.exponent',
+        },
+      }
+    );
+  } catch (err) {
+    logger.error(`Failed to to run "eas build:version:get".`);
+    logger.error(
+      String(err.stdout)
+        .split('\n')
+        .map((i) => `[stdout] ${i}`)
+        .join('\n')
+    );
+    logger.error(
+      String(err.stderr)
+        .split('\n')
+        .map((i) => `[stderr] ${i}`)
+        .join('\n')
+    );
+    throw err;
+  }
+  assert(spawnResult);
+
   const { versionCode: versionCodeString } = JSON.parse(spawnResult.stdout);
   assert(versionCodeString, 'versionCode is not defined on EAS servers.');
   const versionCode = Number(versionCodeString);
@@ -254,8 +274,9 @@ async function validateChangelogAsync() {
     `fastlane/android/metadata/en-US/changelogs/${versionCode + 1}.txt`
   );
   if (!(await fs.pathExists(expectedChangelogPath))) {
-    throw new Error(
+    logger.error(
       `Missing changelog at ${`fastlane/android/metadata/en-US/changelogs/${versionCode + 1}.txt`}`
     );
+    throw new Error('ABORTING');
   }
 }
