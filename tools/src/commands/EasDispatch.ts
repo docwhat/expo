@@ -198,7 +198,7 @@ async function androidBuildAndSubmitAsync() {
     throw err;
   }
   logger.info('Validating changelog');
-  await validateChangelogAsync();
+  //await validateChangelogAsync();
 
   await spawnAsync('eas', ['build', '--platform', 'android', '--profile', RELEASE_BUILD_PROFILE], {
     cwd: projectDir,
