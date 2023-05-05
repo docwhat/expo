@@ -148,14 +148,10 @@ async function iosBuildAndSubmitAsync() {
     throw err;
   }
 
-  await spawnAsync(
-    'eas',
-    ['build', '--platform', 'ios', '--profile', RELEASE_BUILD_PROFILE, '--auto-submit'],
-    {
-      cwd: projectDir,
-      stdio: 'inherit',
-    }
-  );
+  await spawnAsync('eas', ['build', '--platform', 'ios', '--profile', RELEASE_BUILD_PROFILE], {
+    cwd: projectDir,
+    stdio: 'inherit',
+  });
 }
 
 async function androidBuildAndSubmitAsync() {
@@ -204,18 +200,14 @@ async function androidBuildAndSubmitAsync() {
   logger.info('Validating changelog');
   await validateChangelogAsync();
 
-  await spawnAsync(
-    'eas',
-    ['build', '--platform', 'android', '--profile', RELEASE_BUILD_PROFILE, '--auto-submit'],
-    {
-      cwd: projectDir,
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        EAS_DANGEROUS_OVERRIDE_ANDROID_APPLICATION_ID: 'host.exp.exponent',
-      },
-    }
-  );
+  await spawnAsync('eas', ['build', '--platform', 'android', '--profile', RELEASE_BUILD_PROFILE], {
+    cwd: projectDir,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      EAS_DANGEROUS_OVERRIDE_ANDROID_APPLICATION_ID: 'host.exp.exponent',
+    },
+  });
 
   logger.info('Updating versionCode in local app/build.gradle with value from EAS servers.');
   await spawnAsync(

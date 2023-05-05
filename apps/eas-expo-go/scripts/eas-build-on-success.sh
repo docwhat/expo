@@ -6,7 +6,7 @@ ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/../../.. && pwd )"
 export PATH="$ROOT_DIR/bin:$PATH"
 
 notify_slack() {
-  if [[ ! -z "$SLACK_HOOK" ]]; then
+  if [[ -z "$SLACK_HOOK" ]]; then
     curl \
       -X POST \
       -H 'Content-type: application/json' \
