@@ -22,7 +22,6 @@ notify_slack() {
 upload_crashlytics_symbols() {
   cd $ROOT_DIR/apps/eas-expo-go/android
   ./gradlew :app:uploadCrashlyticsSymbolFile$1
-  popd
 }
 
 if [[ "$EAS_BUILD_PROFILE" == "release-client" ]]; then
