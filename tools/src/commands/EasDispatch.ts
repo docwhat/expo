@@ -197,8 +197,6 @@ async function androidBuildAndSubmitAsync() {
     }
     throw err;
   }
-  logger.info('Validating changelog');
-  //await validateChangelogAsync();
 
   await spawnAsync('eas', ['build', '--platform', 'android', '--profile', RELEASE_BUILD_PROFILE], {
     cwd: projectDir,
@@ -222,61 +220,4 @@ async function androidBuildAndSubmitAsync() {
       },
     }
   );
-}
-
-async function validateChangelogAsync() {
-  const projectDir = path.join(EXPO_DIR, 'apps/eas-expo-go');
-  let spawnResult: SpawnResult;
-  try {
-    spawnResult = await spawnAsync(
-      'eas',
-      [
-        'build:version:get',
-        '--platform',
-        'android',
-        '--profile',
-        RELEASE_BUILD_PROFILE,
-        '--json',
-        '--non-interactive',
-      ],
-      {
-        cwd: projectDir,
-        stdio: 'pipe',
-        env: {
-          ...process.env,
-          EAS_DANGEROUS_OVERRIDE_ANDROID_APPLICATION_ID: 'host.exp.exponent',
-        },
-      }
-    );
-  } catch (err) {
-    logger.error(`Failed to to run "eas build:version:get".`);
-    logger.error(
-      String(err.stdout)
-        .split('\n')
-        .map((i) => `[stdout] ${i}`)
-        .join('\n')
-    );
-    logger.error(
-      String(err.stderr)
-        .split('\n')
-        .map((i) => `[stderr] ${i}`)
-        .join('\n')
-    );
-    throw err;
-  }
-  assert(spawnResult);
-
-  const { versionCode: versionCodeString } = JSON.parse(spawnResult.stdout);
-  assert(versionCodeString, 'versionCode is not defined on EAS servers.');
-  const versionCode = Number(versionCodeString);
-  const expectedChangelogPath = path.join(
-    EXPO_DIR,
-    `fastlane/android/metadata/en-US/changelogs/${versionCode + 1}.txt`
-  );
-  if (!(await fs.pathExists(expectedChangelogPath))) {
-    logger.error(
-      `Missing changelog at ${`fastlane/android/metadata/en-US/changelogs/${versionCode + 1}.txt`}`
-    );
-    throw new Error('ABORTING');
-  }
 }
